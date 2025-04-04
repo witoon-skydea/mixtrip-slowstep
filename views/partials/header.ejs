@@ -8,7 +8,7 @@
       </div>
       
       <div class="mobile-menu-toggle">
-        <i class="fas fa-bars"></i>
+        <span>☰</span>
       </div>
       
       <ul class="nav-links">
@@ -18,7 +18,7 @@
         
         <% if(user) { %>
           <li class="dropdown">
-            <a href="#" class="dropdown-toggle">
+            <a href="/users/profile" class="dropdown-toggle">
               <% if(user.profilePicture) { %>
                 <img src="<%= user.profilePicture %>" alt="<%= user.displayName %>" class="nav-avatar">
               <% } else { %>
@@ -29,9 +29,9 @@
               <span><%= user.displayName %></span>
             </a>
             <ul class="dropdown-menu">
-              <li><a href="/users/profile"><i class="fas fa-user"></i> โปรไฟล์</a></li>
-              <li><a href="/trips/create"><i class="fas fa-plus"></i> สร้างทริปใหม่</a></li>
-              <li><a href="/users/logout"><i class="fas fa-right-from-bracket"></i> ออกจากระบบ</a></li>
+              <li><a href="/users/profile">โปรไฟล์</a></li>
+              <li><a href="/trips/create">สร้างทริปใหม่</a></li>
+              <li><a href="/users/logout">ออกจากระบบ</a></li>
             </ul>
           </li>
         <% } else { %>

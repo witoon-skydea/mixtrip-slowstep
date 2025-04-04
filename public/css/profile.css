@@ -82,10 +82,7 @@
   align-items: center;
 }
 
-.joined-date:before {
-  content: "\f017"; /* clock icon */
-  font-family: "Font Awesome 6 Free";
-  font-weight: 900;
+.joined-date {
   margin-right: 5px;
   color: var(--primary-color);
 }
