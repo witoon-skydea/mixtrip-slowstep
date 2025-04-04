@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= typeof description != 'undefined' ? description : 'MixTrip - Plan & Share Travel Itineraries' %>">
+  
+  <title><%= typeof title != 'undefined' ? title : 'MixTrip' %></title>
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+  
+  <main class="container">
+    <%- body %>
+  </main>
+  
+  <%- include('../partials/footer') %>
+  
+  <!-- JavaScript -->
+  <script src="/js/main.js"></script>
+</body>
+</html>
