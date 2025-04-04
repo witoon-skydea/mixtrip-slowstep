@@ -60,9 +60,9 @@ app.use(flash());
 app.use((req, res, next) => {
   res.locals.user = req.user || null;
   res.locals.messages = {
-    success_msg: req.flash('success_msg'),
-    error_msg: req.flash('error_msg'),
-    error: req.flash('error')
+    success_msg: req.flash('success_msg') || [],
+    error_msg: req.flash('error_msg') || [],
+    error: req.flash('error') || []
   };
   next();
 });
