@@ -7,8 +7,26 @@
   
   <title><%= typeof title != 'undefined' ? title : 'MixTrip' %></title>
   
+  <!-- Thai Font -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap">
+  
+  <style>
+    body {
+      font-family: 'Noto Sans Thai', sans-serif !important;
+    }
+    
+    /* Force color change to test CSS update */
+    :root {
+      --primary-color: #FF6F61 !important; /* สีส้มแดง */
+      --secondary-color: #FF9671 !important;
+    }
+  </style>
+  
   <!-- CSS -->
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=<%= new Date().getTime() %>">
+  <link rel="stylesheet" href="/css/auth.css?v=<%= new Date().getTime() %>">
+  <link rel="stylesheet" href="/css/profile.css?v=<%= new Date().getTime() %>">
+  <link rel="stylesheet" href="/css/user-tabs.css?v=<%= new Date().getTime() %>">
   
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,5 +42,33 @@
   
   <!-- JavaScript -->
   <script src="/js/main.js"></script>
+  
+  <!-- CSS Test Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, checking CSS status...');
+      
+      // Test if CSS is loaded correctly
+      const computedStyle = window.getComputedStyle(document.body);
+      const fontFamily = computedStyle.getPropertyValue('font-family');
+      const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+      
+      console.log('Font Family:', fontFamily);
+      console.log('Primary Color:', primaryColor);
+      
+      // Add test element to check visibility
+      const testElement = document.createElement('div');
+      testElement.textContent = 'CSS Test Element';
+      testElement.style.position = 'fixed';
+      testElement.style.bottom = '10px';
+      testElement.style.right = '10px';
+      testElement.style.padding = '10px';
+      testElement.style.backgroundColor = 'var(--primary-color)';
+      testElement.style.color = 'white';
+      testElement.style.zIndex = '9999';
+      testElement.style.fontFamily = "'Noto Sans Thai', sans-serif";
+      document.body.appendChild(testElement);
+    });
+  </script>
 </body>
 </html>

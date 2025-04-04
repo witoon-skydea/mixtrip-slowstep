@@ -75,8 +75,19 @@ app.set('views', './views');
 app.use(expressLayouts);
 app.set('layout', 'layouts/main');
 
-// Set static folder
-app.use(express.static(path.join(__dirname, 'public')));
+// Disable caching for development
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
+// Set static folder with no-cache
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  maxAge: '0'
+}));
 
 // Routes
 app.use('/', require('./routes/index'));

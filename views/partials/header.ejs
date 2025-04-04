@@ -15,6 +15,9 @@
         <li><a href="/">หน้าหลัก</a></li>
         <li><a href="/trips">สำรวจทริป</a></li>
         <li><a href="/about">เกี่ยวกับเรา</a></li>
+        <% if(user) { %>
+        <li><a href="/users/profile">โปรไฟล์</a></li>
+        <% } %>
         
         <% if(user) { %>
           <li class="dropdown">
