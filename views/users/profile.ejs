@@ -28,15 +28,15 @@
         <div class="profile-stats">
           <div class="stat">
             <span class="stat-number">0</span>
-            <span class="stat-label">ทริป</span>
+            <span class="stat-label"><i class="fas fa-route"></i> ทริป</span>
           </div>
           <div class="stat">
             <span class="stat-number"><%= user.followers.length %></span>
-            <span class="stat-label">ผู้ติดตาม</span>
+            <span class="stat-label"><i class="fas fa-users"></i> ผู้ติดตาม</span>
           </div>
           <div class="stat">
             <span class="stat-number"><%= user.following.length %></span>
-            <span class="stat-label">กำลังติดตาม</span>
+            <span class="stat-label"><i class="fas fa-user-plus"></i> กำลังติดตาม</span>
           </div>
         </div>
         
@@ -50,9 +50,9 @@
     <div class="profile-content">
       <div class="profile-tabs">
         <ul class="tab-links">
-          <li class="active"><a href="#trips">ทริปของฉัน</a></li>
-          <li><a href="#saved">ทริปที่บันทึกไว้</a></li>
-          <li><a href="#remixed">ทริปที่รีมิกซ์</a></li>
+          <li class="active"><a href="#trips"><i class="fas fa-map-marked-alt"></i> ทริปของฉัน</a></li>
+          <li><a href="#saved"><i class="fas fa-bookmark"></i> ทริปที่บันทึกไว้</a></li>
+          <li><a href="#remixed"><i class="fas fa-random"></i> ทริปที่รีมิกซ์</a></li>
         </ul>
       </div>
       
@@ -67,7 +67,7 @@
           <% } else { %>
             <div class="empty-state">
               <div class="empty-icon">
-                <i class="fas fa-map-marked-alt"></i>
+                <i class="fas fa-route"></i>
               </div>
               <h3>ยังไม่มีทริป</h3>
               <p>คุณยังไม่ได้สร้างทริปใดๆ เริ่มสร้างทริปแรกของคุณเลย!</p>
@@ -94,7 +94,7 @@
           
           <div class="empty-state">
             <div class="empty-icon">
-              <i class="fas fa-remix"></i>
+              <i class="fas fa-random"></i>
             </div>
             <h3>ยังไม่มีทริปที่รีมิกซ์</h3>
             <p>เมื่อคุณรีมิกซ์ทริปจากผู้ใช้อื่น ทริปเหล่านั้นจะแสดงที่นี่</p>
