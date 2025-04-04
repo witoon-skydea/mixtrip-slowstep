@@ -6,12 +6,82 @@
           <h1>MixTrip</h1>
         </a>
       </div>
+      
+      <div class="mobile-menu-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+      
       <ul class="nav-links">
-        <li><a href="/">Home</a></li>
-        <li><a href="/about">About</a></li>
-        <li><a href="/trips">Explore</a></li>
-        <!-- More navigation links will be added in future phases -->
+        <li><a href="/">หน้าหลัก</a></li>
+        <li><a href="/trips">สำรวจทริป</a></li>
+        <li><a href="/about">เกี่ยวกับเรา</a></li>
+        
+        <% if(user) { %>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle">
+              <% if(user.profilePicture) { %>
+                <img src="<%= user.profilePicture %>" alt="<%= user.displayName %>" class="nav-avatar">
+              <% } else { %>
+                <div class="nav-avatar-placeholder">
+                  <%= user.displayName.charAt(0).toUpperCase() %>
+                </div>
+              <% } %>
+              <span><%= user.displayName %></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="/users/profile"><i class="fas fa-user"></i> โปรไฟล์</a></li>
+              <li><a href="/trips/create"><i class="fas fa-plus"></i> สร้างทริปใหม่</a></li>
+              <li><a href="/users/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a></li>
+            </ul>
+          </li>
+        <% } else { %>
+          <li class="auth-links">
+            <a href="/users/login" class="btn btn-text">เข้าสู่ระบบ</a>
+            <a href="/users/register" class="btn btn-primary btn-sm">สมัครสมาชิก</a>
+          </li>
+        <% } %>
       </ul>
     </div>
   </nav>
+  
+  <% if(messages && (messages.success_msg || messages.error_msg || messages.error)) { %>
+    <div class="flash-messages">
+      <div class="container">
+        <%- include('./messages') %>
+      </div>
+    </div>
+  <% } %>
 </header>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Mobile menu toggle
+    const menuToggle = document.querySelector('.mobile-menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    
+    if (menuToggle) {
+      menuToggle.addEventListener('click', function() {
+        navLinks.classList.toggle('active');
+      });
+    }
+    
+    // Dropdown toggle
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    
+    dropdownToggles.forEach(toggle => {
+      toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        this.parentElement.classList.toggle('active');
+      });
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      dropdownToggles.forEach(toggle => {
+        if (!toggle.contains(e.target)) {
+          toggle.parentElement.classList.remove('active');
+        }
+      });
+    });
+  });
+</script>

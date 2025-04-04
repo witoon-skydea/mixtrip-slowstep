@@ -6,9 +6,15 @@ const methodOverride = require('method-override');
 const connectDB = require('./config/db');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
+const passport = require('passport');
+const flash = require('connect-flash');
+const expressLayouts = require('express-ejs-layouts');
 
 // Load env variables
 dotenv.config();
+
+// Passport config
+require('./config/passport')(passport);
 
 // Initialize express app
 const app = express();
@@ -43,9 +49,21 @@ app.use(
   })
 );
 
-// Set global variables
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Connect flash
+app.use(flash());
+
+// Global variables
 app.use((req, res, next) => {
-  res.locals.user = req.session.user || null;
+  res.locals.user = req.user || null;
+  res.locals.messages = {
+    success_msg: req.flash('success_msg'),
+    error_msg: req.flash('error_msg'),
+    error: req.flash('error')
+  };
   next();
 });
 
@@ -53,15 +71,16 @@ app.use((req, res, next) => {
 app.set('view engine', 'ejs');
 app.set('views', './views');
 
+// Express EJS Layouts
+app.use(expressLayouts);
+app.set('layout', 'layouts/main');
+
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Set up express-ejs-layouts
-app.use(require('express-ejs-layouts'));
-app.set('layout', 'layouts/main');
-
 // Routes
 app.use('/', require('./routes/index'));
+app.use('/users', require('./routes/users'));
 
 // Handle 404
 app.use((req, res) => {

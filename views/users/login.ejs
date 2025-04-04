@@ -1,0 +1,61 @@
+<section class="auth-section">
+  <div class="container">
+    <div class="auth-container">
+      <div class="auth-header">
+        <h1>เข้าสู่ระบบ</h1>
+        <p>เข้าสู่ระบบเพื่อเข้าถึงแผนการเดินทางของคุณ</p>
+      </div>
+      
+      <% if(messages.error) { %>
+        <div class="alert alert-danger">
+          <%= messages.error %>
+        </div>
+      <% } %>
+      
+      <% if(messages.error_msg) { %>
+        <div class="alert alert-danger">
+          <%= messages.error_msg %>
+        </div>
+      <% } %>
+      
+      <% if(messages.success_msg) { %>
+        <div class="alert alert-success">
+          <%= messages.success_msg %>
+        </div>
+      <% } %>
+      
+      <form action="/users/login" method="POST" class="auth-form">
+        <div class="form-group">
+          <label for="email">อีเมล <span class="required">*</span></label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="อีเมลของคุณ"
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="password">รหัสผ่าน <span class="required">*</span></label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="รหัสผ่านของคุณ"
+            required
+          >
+        </div>
+        
+        <div class="form-action">
+          <button type="submit" class="btn btn-primary btn-block">เข้าสู่ระบบ</button>
+        </div>
+        
+        <div class="auth-alt">
+          <p>ยังไม่มีบัญชี? <a href="/users/register">สมัครสมาชิก</a></p>
+          <!-- <p><a href="/users/forgot-password">ลืมรหัสผ่าน?</a></p> -->
+        </div>
+      </form>
+    </div>
+  </div>
+</section>

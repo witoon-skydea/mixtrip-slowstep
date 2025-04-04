@@ -1,0 +1,96 @@
+<section class="edit-profile-section">
+  <div class="container">
+    <div class="page-header">
+      <h1>แก้ไขโปรไฟล์</h1>
+    </div>
+    
+    <% if(typeof errors !== 'undefined') { %>
+      <div class="alert alert-danger">
+        <ul>
+          <% errors.forEach(function(error) { %>
+            <li><%= error.msg %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+    
+    <% if(messages.error_msg) { %>
+      <div class="alert alert-danger">
+        <%= messages.error_msg %>
+      </div>
+    <% } %>
+    
+    <div class="form-container">
+      <form action="/users/edit-profile" method="POST" class="profile-form">
+        <div class="profile-form-header">
+          <div class="current-avatar">
+            <% if(user.profilePicture) { %>
+              <img src="<%= user.profilePicture %>" alt="<%= user.displayName %>">
+            <% } else { %>
+              <div class="avatar-placeholder">
+                <%= user.displayName.charAt(0).toUpperCase() %>
+              </div>
+            <% } %>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="profilePicture">รูปโปรไฟล์ (URL)</label>
+          <input
+            type="url"
+            id="profilePicture"
+            name="profilePicture"
+            value="<%= user.profilePicture %>"
+            placeholder="ใส่ URL ของรูปภาพ (ปล่อยว่างไว้หากไม่ต้องการเปลี่ยน)"
+          >
+          <small>* ในอนาคตจะมีการอัพโหลดรูปภาพโดยตรง</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="displayName">ชื่อที่แสดง <span class="required">*</span></label>
+          <input
+            type="text"
+            id="displayName"
+            name="displayName"
+            value="<%= user.displayName %>"
+            placeholder="ชื่อที่จะแสดงในโปรไฟล์"
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="bio">ประวัติโดยย่อ</label>
+          <textarea
+            id="bio"
+            name="bio"
+            rows="4"
+            placeholder="เล่าเกี่ยวกับตัวคุณสั้นๆ"
+          ><%= user.bio %></textarea>
+        </div>
+        
+        <div class="form-divider"></div>
+        
+        <div class="form-group email-readonly">
+          <label>อีเมล</label>
+          <div class="readonly-field">
+            <%= user.email %>
+          </div>
+          <small>* ไม่สามารถเปลี่ยนอีเมลได้ในขณะนี้</small>
+        </div>
+        
+        <div class="form-group username-readonly">
+          <label>ชื่อผู้ใช้</label>
+          <div class="readonly-field">
+            <%= user.username %>
+          </div>
+          <small>* ไม่สามารถเปลี่ยนชื่อผู้ใช้ได้ในขณะนี้</small>
+        </div>
+        
+        <div class="form-action">
+          <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+          <a href="/users/profile" class="btn btn-secondary">ยกเลิก</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>

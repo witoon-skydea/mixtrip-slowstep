@@ -1,0 +1,137 @@
+<section class="profile-section">
+  <div class="container">
+    <% if(messages.success_msg) { %>
+      <div class="alert alert-success">
+        <%= messages.success_msg %>
+      </div>
+    <% } %>
+    
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <% if(user.profilePicture) { %>
+          <img src="<%= user.profilePicture %>" alt="<%= user.displayName %>">
+        <% } else { %>
+          <div class="avatar-placeholder">
+            <%= user.displayName.charAt(0).toUpperCase() %>
+          </div>
+        <% } %>
+      </div>
+      
+      <div class="profile-info">
+        <h1><%= user.displayName %></h1>
+        <p class="username">@<%= user.username %></p>
+        <% if(user.bio) { %>
+          <p class="bio"><%= user.bio %></p>
+        <% } %>
+        <p class="joined-date">สมาชิกตั้งแต่ <%= new Date(user.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+        
+        <div class="profile-stats">
+          <div class="stat">
+            <span class="stat-number">0</span>
+            <span class="stat-label">ทริป</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number"><%= user.followers.length %></span>
+            <span class="stat-label">ผู้ติดตาม</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number"><%= user.following.length %></span>
+            <span class="stat-label">กำลังติดตาม</span>
+          </div>
+        </div>
+        
+        <div class="profile-actions">
+          <a href="/users/edit-profile" class="btn btn-secondary">แก้ไขโปรไฟล์</a>
+          <a href="/trips/create" class="btn btn-primary">สร้างทริปใหม่</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="profile-content">
+      <div class="profile-tabs">
+        <ul class="tab-links">
+          <li class="active"><a href="#trips">ทริปของฉัน</a></li>
+          <li><a href="#saved">ทริปที่บันทึกไว้</a></li>
+          <li><a href="#remixed">ทริปที่รีมิกซ์</a></li>
+        </ul>
+      </div>
+      
+      <div class="tab-content">
+        <div id="trips" class="tab-pane active">
+          <h2>ทริปของฉัน</h2>
+          
+          <% if(false) { %> <!-- จะแสดงทริปในอนาคต -->
+            <div class="trip-grid">
+              <!-- Trip cards will be here -->
+            </div>
+          <% } else { %>
+            <div class="empty-state">
+              <div class="empty-icon">
+                <i class="fas fa-map-marked-alt"></i>
+              </div>
+              <h3>ยังไม่มีทริป</h3>
+              <p>คุณยังไม่ได้สร้างทริปใดๆ เริ่มสร้างทริปแรกของคุณเลย!</p>
+              <a href="/trips/create" class="btn btn-primary">สร้างทริปใหม่</a>
+            </div>
+          <% } %>
+        </div>
+        
+        <div id="saved" class="tab-pane">
+          <h2>ทริปที่บันทึกไว้</h2>
+          
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="fas fa-bookmark"></i>
+            </div>
+            <h3>ยังไม่มีทริปที่บันทึกไว้</h3>
+            <p>เมื่อคุณบันทึกทริปที่สนใจ ทริปเหล่านั้นจะแสดงที่นี่</p>
+            <a href="/trips" class="btn btn-primary">สำรวจทริป</a>
+          </div>
+        </div>
+        
+        <div id="remixed" class="tab-pane">
+          <h2>ทริปที่รีมิกซ์</h2>
+          
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="fas fa-remix"></i>
+            </div>
+            <h3>ยังไม่มีทริปที่รีมิกซ์</h3>
+            <p>เมื่อคุณรีมิกซ์ทริปจากผู้ใช้อื่น ทริปเหล่านั้นจะแสดงที่นี่</p>
+            <a href="/trips" class="btn btn-primary">สำรวจทริป</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching
+    const tabLinks = document.querySelectorAll('.tab-links li a');
+    
+    tabLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Hide all tab panes
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+          pane.classList.remove('active');
+        });
+        
+        // Remove active class from all tab links
+        document.querySelectorAll('.tab-links li').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        
+        // Add active class to current tab link
+        this.parentElement.classList.add('active');
+        
+        // Show target tab pane
+        const targetId = this.getAttribute('href');
+        document.querySelector(targetId).classList.add('active');
+      });
+    });
+  });
+</script>
