@@ -4,19 +4,25 @@
       <h1>แก้ไขโปรไฟล์</h1>
     </div>
     
-    <% if(typeof errors !== 'undefined') { %>
-      <div class="alert alert-danger">
+    <% if(typeof errors !== 'undefined' && errors.length > 0) { %>
+      <div class="alert alert-danger alert-dismissible fade show">
         <ul>
           <% errors.forEach(function(error) { %>
             <li><%= error.msg %></li>
           <% }); %>
         </ul>
+        <button type="button" class="close-btn" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true"><i class="fas fa-times"></i></span>
+        </button>
       </div>
     <% } %>
     
-    <% if(messages.error_msg) { %>
-      <div class="alert alert-danger">
+    <% if(messages.error_msg && messages.error_msg.length > 0) { %>
+      <div class="alert alert-danger alert-dismissible fade show">
         <%= messages.error_msg %>
+        <button type="button" class="close-btn" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true"><i class="fas fa-times"></i></span>
+        </button>
       </div>
     <% } %>
     
@@ -94,3 +100,30 @@
     </div>
   </div>
 </section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle alert close buttons
+    const closeButtons = document.querySelectorAll('.alert .close-btn');
+    
+    closeButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const alert = this.parentElement;
+        alert.classList.remove('show');
+        setTimeout(() => {
+          alert.style.display = 'none';
+        }, 150);
+      });
+    });
+    
+    // Auto close alerts after 5 seconds
+    setTimeout(() => {
+      document.querySelectorAll('.alert').forEach(alert => {
+        alert.classList.remove('show');
+        setTimeout(() => {
+          alert.style.display = 'none';
+        }, 150);
+      });
+    }, 5000);
+  });
+</script>
