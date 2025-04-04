@@ -176,6 +176,13 @@ header {
 .nav-links a {
   color: var(--dark-color);
   font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.nav-links a i {
+  margin-right: 6px;
+  font-size: 0.9em;
 }
 
 .nav-links a:hover {
@@ -219,6 +226,12 @@ header {
   color: var(--dark-color);
 }
 
+.dropdown-menu a i {
+  width: 20px;
+  margin-right: 8px;
+  text-align: center;
+}
+
 .dropdown-menu a:hover {
   background-color: var(--light-color);
 }
@@ -241,6 +254,46 @@ header {
   font-size: 1.5rem;
   color: var(--dark-color);
   cursor: pointer;
+}
+
+/* Alert styling for close icons */
+.alert .close-btn {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.alert .close-btn:hover {
+  opacity: 1;
+}
+
+.alert {
+  position: relative;
+  padding: 15px 35px 15px 15px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+}
+
+.alert-danger {
+  background-color: #ffeaea;
+  color: var(--danger-color);
+  border-left: 4px solid var(--danger-color);
+}
+
+.alert-success {
+  background-color: #e6f7ef;
+  color: var(--success-color);
+  border-left: 4px solid var(--success-color);
+}
+
+.flash-messages {
+  margin-bottom: 20px;
 }
 
 /* Hero Section */

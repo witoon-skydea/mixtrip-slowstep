@@ -8,15 +8,15 @@
       </div>
       
       <div class="mobile-menu-toggle">
-        <span>☰</span>
+        <span><i class="fas fa-bars"></i></span>
       </div>
       
       <ul class="nav-links">
-        <li><a href="/">หน้าหลัก</a></li>
-        <li><a href="/trips">สำรวจทริป</a></li>
-        <li><a href="/about">เกี่ยวกับเรา</a></li>
+        <li><a href="/"><i class="fas fa-home"></i> หน้าหลัก</a></li>
+        <li><a href="/trips"><i class="fas fa-map-marked-alt"></i> สำรวจทริป</a></li>
+        <li><a href="/about"><i class="fas fa-info-circle"></i> เกี่ยวกับเรา</a></li>
         <% if(user) { %>
-        <li><a href="/users/profile">โปรไฟล์</a></li>
+        <li><a href="/users/profile"><i class="fas fa-user"></i> โปรไฟล์</a></li>
         <% } %>
         
         <% if(user) { %>
@@ -32,15 +32,15 @@
               <span><%= user.displayName %></span>
             </a>
             <ul class="dropdown-menu">
-              <li><a href="/users/profile">โปรไฟล์</a></li>
-              <li><a href="/trips/create">สร้างทริปใหม่</a></li>
-              <li><a href="/users/logout">ออกจากระบบ</a></li>
+              <li><a href="/users/profile"><i class="fas fa-user"></i> โปรไฟล์</a></li>
+              <li><a href="/trips/create"><i class="fas fa-plus-circle"></i> สร้างทริปใหม่</a></li>
+              <li><a href="/users/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a></li>
             </ul>
           </li>
         <% } else { %>
           <li class="auth-links">
-            <a href="/users/login" class="btn btn-text">เข้าสู่ระบบ</a>
-            <a href="/users/register" class="btn btn-primary btn-sm">สมัครสมาชิก</a>
+            <a href="/users/login" class="btn btn-text"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ</a>
+            <a href="/users/register" class="btn btn-primary btn-sm"><i class="fas fa-user-plus"></i> สมัครสมาชิก</a>
           </li>
         <% } %>
       </ul>
