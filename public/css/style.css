@@ -317,7 +317,7 @@ header {
 
 /* Hero Section */
 .hero {
-  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://source.unsplash.com/random/1600x900/?travel');
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/main_photo.png');
   background-size: cover;
   background-position: center;
   color: white;
@@ -353,6 +353,65 @@ header {
 .features {
   padding: 60px 0;
   background-color: white;
+}
+
+/* Main Banner Section */
+.main-banner {
+  padding: 80px 0;
+  background-color: #f8f9fa;
+}
+
+.main-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.main-banner-image {
+  flex: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+
+.featured-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.featured-image:hover {
+  transform: scale(1.02);
+}
+
+.main-banner-text {
+  flex: 1;
+  padding: 20px;
+}
+
+.main-banner-text h2 {
+  font-size: 2.2rem;
+  margin-bottom: 20px;
+  color: var(--dark-color);
+}
+
+.main-banner-text p {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .main-banner-content {
+    flex-direction: column;
+  }
+  
+  .main-banner-image, 
+  .main-banner-text {
+    width: 100%;
+  }
 }
 
 .section-title {
