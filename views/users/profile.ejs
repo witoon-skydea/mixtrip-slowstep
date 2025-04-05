@@ -30,7 +30,7 @@
         
         <div class="profile-stats">
           <div class="stat">
-            <span class="stat-number">0</span>
+            <span class="stat-number" id="tripCount">0</span>
             <span class="stat-label">ทริป</span>
           </div>
           <div class="stat">
@@ -63,20 +63,11 @@
         <div id="trips" class="tab-pane active">
           <h2>ทริปของฉัน</h2>
           
-          <% if(false) { %> <!-- จะแสดงทริปในอนาคต -->
-            <div class="trip-grid">
-              <!-- Trip cards will be here -->
+          <div id="trips-container">
+            <div class="loading-spinner">
+              <i class="fas fa-spinner fa-spin"></i> กำลังโหลดทริป...
             </div>
-          <% } else { %>
-            <div class="empty-state">
-              <div class="empty-text">
-                ⊕
-              </div>
-              <h3>ยังไม่มีทริป</h3>
-              <p>คุณยังไม่ได้สร้างทริปใดๆ เริ่มสร้างทริปแรกของคุณเลย!</p>
-              <a href="/trips/create" class="btn btn-primary">สร้างทริปใหม่</a>
-            </div>
-          <% } %>
+          </div>
         </div>
         
         <div id="saved" class="tab-pane">
@@ -159,5 +150,221 @@
         }, 150);
       });
     }, 5000);
+    
+    // Load user trips
+    function loadUserTrips() {
+      const tripsContainer = document.getElementById('trips-container');
+      const userId = '<%= user._id %>';
+      
+      fetch(`/trips/user/${userId}`)
+        .then(response => {
+          if (response.redirected) {
+            window.location.href = response.url;
+            return;
+          }
+          return response.text();
+        })
+        .then(data => {
+          if (data) {
+            // Extract trip count from the data
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(data, 'text/html');
+            const tripCards = htmlDoc.querySelectorAll('.trip-card');
+            
+            // Update trip count
+            document.getElementById('tripCount').textContent = tripCards.length;
+            
+            // Generate HTML for trips tab
+            if (tripCards.length > 0) {
+              const tripGrid = document.createElement('div');
+              tripGrid.className = 'trip-grid';
+              tripGrid.innerHTML = htmlDoc.querySelector('.trip-grid').innerHTML;
+              tripsContainer.innerHTML = '';
+              tripsContainer.appendChild(tripGrid);
+              
+              // Add delete trip event listeners
+              const deleteButtons = tripsContainer.querySelectorAll('.delete-trip-btn');
+              deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                  const tripId = this.getAttribute('data-id');
+                  if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบทริปนี้? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
+                    document.getElementById('delete-form-' + tripId).submit();
+                  }
+                });
+              });
+            } else {
+              // Show empty state
+              tripsContainer.innerHTML = `
+                <div class="empty-state">
+                  <div class="empty-text">⊕</div>
+                  <h3>ยังไม่มีทริป</h3>
+                  <p>คุณยังไม่ได้สร้างทริปใดๆ เริ่มสร้างทริปแรกของคุณเลย!</p>
+                  <a href="/trips/create" class="btn btn-primary">สร้างทริปใหม่</a>
+                </div>
+              `;
+            }
+          } else {
+            tripsContainer.innerHTML = '<p class="error-message">เกิดข้อผิดพลาดในการโหลดทริป กรุณาลองใหม่อีกครั้ง</p>';
+          }
+        })
+        .catch(error => {
+          console.error('Error loading trips:', error);
+          tripsContainer.innerHTML = '<p class="error-message">เกิดข้อผิดพลาดในการโหลดทริป กรุณาลองใหม่อีกครั้ง</p>';
+        });
+    }
+    
+    // Load trips on page load
+    loadUserTrips();
   });
 </script>
+
+<style>
+  .loading-spinner {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+  
+  .loading-spinner i {
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+  }
+  
+  .error-message {
+    text-align: center;
+    color: #f44336;
+    padding: 1rem;
+  }
+  
+  .trip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  
+  .trip-card {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+  
+  .trip-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .trip-card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+  
+  .trip-card-image {
+    height: 150px;
+    position: relative;
+  }
+  
+  .trip-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .default-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    font-size: 3rem;
+  }
+  
+  .trip-visibility {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8rem;
+  }
+  
+  .trip-visibility.public {
+    background-color: rgba(25, 118, 210, 0.8);
+  }
+  
+  .trip-visibility.private {
+    background-color: rgba(211, 47, 47, 0.8);
+  }
+  
+  .trip-card-content {
+    padding: 1.2rem;
+  }
+  
+  .trip-card-content h3 {
+    font-size: 1.2rem;
+    margin: 0 0 0.5rem;
+    color: #333;
+  }
+  
+  .trip-dates {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+  }
+  
+  .trip-dates i {
+    color: var(--primary-color);
+    margin-right: 0.3rem;
+  }
+  
+  .trip-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: #777;
+  }
+  
+  .trip-stats i {
+    color: var(--primary-color);
+  }
+  
+  .trip-card-actions {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .btn-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  
+  .btn-edit {
+    background-color: #2196f3;
+  }
+  
+  .btn-delete {
+    background-color: #f44336;
+  }
+</style>

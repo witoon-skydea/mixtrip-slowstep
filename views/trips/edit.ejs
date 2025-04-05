@@ -1,0 +1,759 @@
+<section class="edit-trip-section">
+  <div class="container">
+    <div class="section-header">
+      <h1>แก้ไขทริป</h1>
+      <p>ปรับแต่งรายละเอียดทริปของคุณ</p>
+    </div>
+
+    <% if(typeof errors != 'undefined' && errors.length > 0) { %>
+      <div class="alert alert-error">
+        <ul>
+          <% errors.forEach(function(error) { %>
+            <li><%= error.msg %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form action="/trips/<%= trip._id %>?_method=PUT" method="POST" class="trip-form" id="editTripForm">
+      <div class="trip-basic-info">
+        <h2>ข้อมูลพื้นฐาน</h2>
+        
+        <div class="form-group">
+          <label for="title">ชื่อทริป *</label>
+          <input type="text" id="title" name="title" required placeholder="เช่น ทริปเที่ยวภูเก็ต 3 วัน" value="<%= trip.title %>">
+        </div>
+        
+        <div class="form-group">
+          <label for="description">รายละเอียดทริป</label>
+          <textarea id="description" name="description" rows="4" placeholder="อธิบายเกี่ยวกับทริปของคุณ"><%= trip.description %></textarea>
+        </div>
+        
+        <div class="form-group form-group-inline">
+          <div class="form-group-half">
+            <label for="startDate">วันที่เริ่มต้น *</label>
+            <input type="date" id="startDate" name="startDate" required value="<%= new Date(trip.startDate).toISOString().split('T')[0] %>">
+          </div>
+          
+          <div class="form-group-half">
+            <label for="endDate">วันที่สิ้นสุด *</label>
+            <input type="date" id="endDate" name="endDate" required value="<%= new Date(trip.endDate).toISOString().split('T')[0] %>">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="coverImage">รูปภาพหน้าปก URL (ถ้ามี)</label>
+          <input type="url" id="coverImage" name="coverImage" placeholder="https://example.com/image.jpg" value="<%= trip.coverImage %>">
+          <p class="form-help">ใส่ URL ของรูปภาพที่คุณต้องการใช้เป็นภาพหน้าปกทริป</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="isPublic">ความเป็นส่วนตัว</label>
+          <div class="toggle-container">
+            <input type="checkbox" id="isPublic" name="isPublic" value="true" <%= trip.isPublic ? 'checked' : '' %>>
+            <label for="isPublic" class="toggle-label">
+              <span class="toggle-inner"></span>
+              <span class="toggle-switch"></span>
+            </label>
+            <span class="toggle-text">สาธารณะ (ทุกคนสามารถดูทริปนี้ได้)</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="trip-locations">
+        <h2>สถานที่</h2>
+        
+        <div id="map-container">
+          <div id="map"></div>
+          <p class="form-help">ค้นหาและเพิ่มสถานที่ที่คุณจะเดินทางไป</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="location-search">ค้นหาสถานที่</label>
+          <div class="search-container">
+            <input type="text" id="location-search" placeholder="ค้นหาสถานที่...">
+            <button type="button" id="add-location-btn" class="btn-sm">เพิ่ม</button>
+          </div>
+        </div>
+        
+        <div id="locations-list" class="locations-list">
+          <!-- สถานที่จะถูกเพิ่มที่นี่ด้วย JavaScript -->
+          <p id="no-locations" class="empty-message">ยังไม่ได้เพิ่มสถานที่</p>
+        </div>
+        
+        <input type="hidden" id="locations" name="locations" value="<%= JSON.stringify(trip.locations) %>">
+      </div>
+      
+      <div class="trip-days">
+        <h2>วางแผนรายวัน</h2>
+        <p class="form-help">จัดการกิจกรรมสำหรับแต่ละวันของทริป</p>
+        
+        <div id="days-container">
+          <!-- วันจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+          <p id="no-days" class="empty-message">ยังไม่ได้กำหนดวันในทริป กรุณาเลือกวันที่เริ่มต้นและสิ้นสุด</p>
+        </div>
+        
+        <input type="hidden" id="days" name="days" value="<%= JSON.stringify(trip.days) %>">
+      </div>
+      
+      <div class="form-actions">
+        <a href="/trips/<%= trip._id %>" class="btn btn-text">ยกเลิก</a>
+        <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<link rel="stylesheet" href="/css/trip-create.css">
+
+<!-- Google Maps JavaScript API -->
+<script>
+  // Global variables
+  let map;
+  let autocomplete;
+  let markers = [];
+  let locations = <%= JSON.stringify(trip.locations) %>;
+  let days = <%= JSON.stringify(trip.days) %>;
+  let currentPlace = null;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    
+    // Update locations list
+    updateLocationsList();
+    
+    // ฟอร์มซับมิตเตอร์
+    document.getElementById('editTripForm').addEventListener('submit', function(event) {
+      // เตรียมข้อมูลสำหรับส่ง
+      document.getElementById('locations').value = JSON.stringify(locations);
+      document.getElementById('days').value = JSON.stringify(days);
+    });
+    
+    // Date range handling
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    
+    function updateDays() {
+      const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
+      const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
+      
+      if (startDate && endDate) {
+        if (startDate > endDate) {
+          alert('วันที่สิ้นสุดต้องมาหลังวันที่เริ่มต้น');
+          endDateInput.value = startDateInput.value;
+          return;
+        }
+        
+        // คำนวณจำนวนวัน
+        const timeDiff = endDate.getTime() - startDate.getTime();
+        const dayCount = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+        
+        // ตรวจสอบว่าต้องปรับขนาดของอาร์เรย์วันหรือไม่
+        if (days.length !== dayCount) {
+          if (confirm('การเปลี่ยนช่วงวันที่จะเปลี่ยนโครงสร้างทริปของคุณ คุณแน่ใจหรือไม่?')) {
+            // สร้างอาร์เรย์วันใหม่
+            if (dayCount > days.length) {
+              // เพิ่มวันใหม่
+              for (let i = days.length; i < dayCount; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + i);
+                
+                days.push({
+                  date: currentDate.toISOString().split('T')[0],
+                  activities: []
+                });
+              }
+            } else {
+              // ลดจำนวนวัน
+              days = days.slice(0, dayCount);
+            }
+            
+            // อัปเดตวันที่สำหรับแต่ละวัน
+            for (let i = 0; i < days.length; i++) {
+              const currentDate = new Date(startDate);
+              currentDate.setDate(startDate.getDate() + i);
+              days[i].date = currentDate.toISOString().split('T')[0];
+            }
+          } else {
+            // ยกเลิกการเปลี่ยนวันที่
+            startDateInput.value = new Date(days[0].date).toISOString().split('T')[0];
+            const lastDay = new Date(days[days.length - 1].date);
+            endDateInput.value = lastDay.toISOString().split('T')[0];
+            return;
+          }
+        }
+        
+        renderDays();
+      }
+    }
+    
+    startDateInput.addEventListener('change', updateDays);
+    endDateInput.addEventListener('change', updateDays);
+    
+    // แสดงรายการวัน
+    function renderDays() {
+      const daysContainer = document.getElementById('days-container');
+      daysContainer.innerHTML = '';
+      
+      if (days.length === 0) {
+        daysContainer.innerHTML = '<p id="no-days" class="empty-message">ยังไม่ได้กำหนดวันในทริป กรุณาเลือกวันที่เริ่มต้นและสิ้นสุด</p>';
+        return;
+      }
+      
+      // สร้าง HTML สำหรับแต่ละวัน
+      days.forEach((day, dayIndex) => {
+        const dayDate = new Date(day.date);
+        
+        const dayElement = document.createElement('div');
+        dayElement.className = 'day-card';
+        dayElement.innerHTML = `
+          <div class="day-header">
+            <h3>วันที่ ${dayIndex + 1}: ${formatDate(dayDate)}</h3>
+            <button type="button" class="btn-sm btn-add-activity" data-day="${dayIndex}">+ เพิ่มกิจกรรม</button>
+          </div>
+          <div class="activities-list" id="activities-day-${dayIndex}">
+            ${day.activities && day.activities.length > 0
+              ? day.activities.map((activity, activityIndex) => `
+                <div class="activity-item">
+                  <div class="activity-content">
+                    <h4>${activity.title}</h4>
+                    <div class="activity-time">${activity.startTime} - ${activity.endTime}</div>
+                    ${activity.location && activity.location.name
+                      ? `<div class="activity-location"><i class="fas fa-map-marker-alt"></i> ${activity.location.name}</div>`
+                      : ''}
+                    ${activity.description
+                      ? `<p>${activity.description}</p>`
+                      : ''}
+                  </div>
+                  <button type="button" class="btn-remove" data-day="${dayIndex}" data-activity="${activityIndex}">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              `).join('')
+              : '<p class="empty-message">ยังไม่มีกิจกรรมในวันนี้</p>'
+            }
+          </div>
+        `;
+        
+        daysContainer.appendChild(dayElement);
+        
+        // เพิ่ม event listener สำหรับปุ่มเพิ่มกิจกรรม
+        dayElement.querySelector('.btn-add-activity').addEventListener('click', function() {
+          showActivityModal(dayIndex);
+        });
+        
+        // เพิ่ม event listener สำหรับปุ่มลบกิจกรรม
+        if (day.activities && day.activities.length > 0) {
+          const removeButtons = dayElement.querySelectorAll('.btn-remove');
+          removeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+              const dayIndex = parseInt(this.getAttribute('data-day'));
+              const activityIndex = parseInt(this.getAttribute('data-activity'));
+              removeActivity(dayIndex, activityIndex);
+            });
+          });
+        }
+      });
+      
+      document.getElementById('no-days') && (document.getElementById('no-days').style.display = 'none');
+    }
+    
+    // Format date for display
+    function formatDate(date) {
+      const options = { day: 'numeric', month: 'long', year: 'numeric' };
+      return date.toLocaleDateString('th-TH', options);
+    }
+    
+    // ลบกิจกรรม
+    function removeActivity(dayIndex, activityIndex) {
+      if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรมนี้?')) {
+        days[dayIndex].activities.splice(activityIndex, 1);
+        renderDays();
+      }
+    }
+    
+    // Activity modal functionality
+    function showActivityModal(dayIndex) {
+      alert(`คุณกำลังเพิ่มกิจกรรมสำหรับวันที่ ${dayIndex + 1}\n\nหมายเหตุ: ฟีเจอร์นี้จะใช้งานได้ในหน้ารายละเอียดทริปหลังจากบันทึกการเปลี่ยนแปลง`);
+    }
+    
+    // เรียกใช้ renderDays เมื่อโหลดหน้า
+    renderDays();
+    
+    // ฟังก์ชันเริ่มต้น Google Maps
+    function initMap() {
+      // สร้างแผนที่
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 13.7563, lng: 100.5018 }, // กรุงเทพฯ
+        zoom: 6,
+        mapTypeControl: false,
+        streetViewControl: false
+      });
+      
+      // สร้าง Autocomplete สำหรับการค้นหาสถานที่
+      autocomplete = new google.maps.places.Autocomplete(
+        document.getElementById('location-search'),
+        { types: ['geocode', 'establishment'] }
+      );
+      
+      autocomplete.addListener('place_changed', onPlaceChanged);
+      
+      // เพิ่ม event listener สำหรับปุ่มเพิ่มสถานที่
+      document.getElementById('add-location-btn').addEventListener('click', addCurrentPlace);
+      
+      // แสดงสถานที่ที่มีอยู่บนแผนที่
+      if (locations.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        
+        locations.forEach(location => {
+          const marker = new google.maps.Marker({
+            position: { lat: location.lat, lng: location.lng },
+            map: map,
+            title: location.name
+          });
+          
+          markers.push(marker);
+          bounds.extend(marker.getPosition());
+        });
+        
+        map.fitBounds(bounds);
+        if (locations.length === 1) {
+          map.setZoom(14);
+        }
+      }
+    }
+    
+    // เมื่อเลือกสถานที่จาก Autocomplete
+    function onPlaceChanged() {
+      const place = autocomplete.getPlace();
+      
+      if (!place.geometry) {
+        alert('ไม่พบสถานที่ที่คุณค้นหา กรุณาเลือกจากรายการเสนอแนะ');
+        return;
+      }
+      
+      // บันทึกสถานที่ปัจจุบัน
+      currentPlace = {
+        name: place.name,
+        placeId: place.place_id,
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+        address: place.formatted_address || ''
+      };
+      
+      // เลื่อนแผนที่ไปที่สถานที่
+      map.setCenter(place.geometry.location);
+      map.setZoom(14);
+      
+      // เพิ่มมาร์กเกอร์ชั่วคราว
+      const marker = new google.maps.Marker({
+        position: place.geometry.location,
+        map: map,
+        title: place.name,
+        animation: google.maps.Animation.DROP
+      });
+      
+      setTimeout(() => {
+        marker.setMap(null);
+      }, 3000);
+    }
+    
+    // เพิ่มสถานที่ในทริป
+    function addCurrentPlace() {
+      if (!currentPlace) {
+        alert('กรุณาค้นหาและเลือกสถานที่ก่อน');
+        return;
+      }
+      
+      // ตรวจสอบว่าสถานที่นี้ถูกเพิ่มไปแล้วหรือไม่
+      const exists = locations.some(loc => loc.placeId === currentPlace.placeId);
+      if (exists) {
+        alert('สถานที่นี้ถูกเพิ่มในทริปแล้ว');
+        return;
+      }
+      
+      // เพิ่มสถานที่ในอาร์เรย์
+      locations.push(currentPlace);
+      
+      // อัปเดตรายการสถานที่
+      updateLocationsList();
+      
+      // เพิ่มมาร์กเกอร์บนแผนที่
+      const marker = new google.maps.Marker({
+        position: { lat: currentPlace.lat, lng: currentPlace.lng },
+        map: map,
+        title: currentPlace.name,
+        animation: google.maps.Animation.DROP
+      });
+      
+      markers.push(marker);
+      
+      // ล้างฟอร์มค้นหา
+      document.getElementById('location-search').value = '';
+      currentPlace = null;
+    }
+    
+    // อัปเดตรายการสถานที่
+    function updateLocationsList() {
+      const locationsList = document.getElementById('locations-list');
+      const noLocations = document.getElementById('no-locations');
+      
+      if (locations.length === 0) {
+        locationsList.innerHTML = '<p id="no-locations" class="empty-message">ยังไม่ได้เพิ่มสถานที่</p>';
+        return;
+      }
+      
+      if (noLocations) {
+        noLocations.style.display = 'none';
+      }
+      
+      let html = '';
+      locations.forEach((location, index) => {
+        html += `
+          <div class="location-item">
+            <div class="location-info">
+              <h4>${location.name}</h4>
+              <p>${location.address}</p>
+            </div>
+            <button type="button" class="btn-remove" data-index="${index}">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        `;
+      });
+      
+      locationsList.innerHTML = html + (document.getElementById('no-locations') ? document.getElementById('no-locations').outerHTML : '');
+      document.getElementById('no-locations') && (document.getElementById('no-locations').style.display = 'none');
+      
+      // เพิ่ม event listener สำหรับปุ่มลบ
+      const removeButtons = locationsList.querySelectorAll('.btn-remove');
+      removeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const index = parseInt(this.getAttribute('data-index'));
+          removeLocation(index);
+        });
+      });
+    }
+    
+    // ลบสถานที่
+    function removeLocation(index) {
+      // ลบมาร์กเกอร์จากแผนที่
+      if (markers[index]) {
+        markers[index].setMap(null);
+        markers.splice(index, 1);
+      }
+      
+      // ลบสถานที่จากอาร์เรย์
+      locations.splice(index, 1);
+      
+      // อัปเดตรายการสถานที่
+      updateLocationsList();
+      
+      if (locations.length === 0 && document.getElementById('no-locations')) {
+        document.getElementById('no-locations').style.display = 'block';
+      }
+    }
+    
+    // Mock Google Maps API initialization
+    // ในโปรดักชันคุณจะใช้ Google Maps JavaScript API จริง
+    window.initMap = initMap;
+    
+    // เรียกใช้ initMap แบบจำลอง (สถานการณ์ mock)
+    setTimeout(initMap, 1000);
+  });
+</script>
+
+<!-- ในโปรดักชันคุณจะใช้ Google Maps JavaScript API จริง -->
+<!--
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap" async defer></script>
+-->
+
+<style>
+  .edit-trip-section {
+    padding: 2rem 0;
+  }
+  
+  .section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .section-header h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+  }
+  
+  .section-header p {
+    font-size: 1.1rem;
+    color: #666;
+  }
+  
+  .trip-form {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  }
+  
+  .trip-basic-info,
+  .trip-locations,
+  .trip-days {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .trip-form h2 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .form-group input[type="text"],
+  .form-group input[type="url"],
+  .form-group input[type="date"],
+  .form-group textarea,
+  .search-container input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+  }
+  
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .search-container input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+  }
+  
+  .form-group-inline {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .form-group-half {
+    flex: 1;
+  }
+  
+  .form-help {
+    font-size: 0.9rem;
+    color: #777;
+    margin-top: 0.5rem;
+  }
+  
+  .toggle-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .toggle-container input[type="checkbox"] {
+    display: none;
+  }
+  
+  .toggle-label {
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+    position: relative;
+    cursor: pointer;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: background-color 0.3s;
+  }
+  
+  .toggle-switch {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: white;
+    transition: transform 0.3s;
+  }
+  
+  .toggle-container input:checked + .toggle-label {
+    background-color: var(--primary-color);
+  }
+  
+  .toggle-container input:checked + .toggle-label .toggle-switch {
+    transform: translateX(26px);
+  }
+  
+  .toggle-text {
+    margin-left: 10px;
+    font-size: 0.95rem;
+  }
+  
+  #map-container {
+    margin-bottom: 1.5rem;
+  }
+  
+  #map {
+    height: 300px;
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    background-color: #f0f0f0;
+  }
+  
+  .search-container {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .search-container input {
+    flex: 1;
+  }
+  
+  .btn-sm {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-sm:hover {
+    background-color: var(--secondary-color);
+  }
+  
+  .locations-list,
+  .activities-list {
+    margin-top: 1rem;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .location-item,
+  .activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .location-item:last-child,
+  .activity-item:last-child {
+    border-bottom: none;
+  }
+  
+  .location-info,
+  .activity-content {
+    flex: 1;
+  }
+  
+  .location-info h4,
+  .activity-content h4 {
+    margin: 0 0 0.3rem;
+    font-size: 1.1rem;
+  }
+  
+  .location-info p,
+  .activity-time,
+  .activity-location {
+    margin: 0 0 0.3rem;
+    font-size: 0.9rem;
+    color: #777;
+  }
+  
+  .activity-time {
+    color: var(--primary-color);
+    font-weight: 500;
+  }
+  
+  .activity-location i {
+    color: var(--primary-color);
+    margin-right: 0.3rem;
+  }
+  
+  .btn-remove {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.3rem;
+    transition: color 0.3s;
+    flex-shrink: 0;
+  }
+  
+  .btn-remove:hover {
+    color: #ff5252;
+  }
+  
+  .empty-message {
+    text-align: center;
+    color: #888;
+    padding: 1.5rem;
+  }
+  
+  .day-card {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+  
+  .day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .day-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+  }
+  
+  .btn-add-activity {
+    background-color: #4caf50;
+  }
+  
+  .btn-add-activity:hover {
+    background-color: #43a047;
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  @media (max-width: 768px) {
+    .form-group-inline {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .day-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+  }
+</style>

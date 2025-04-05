@@ -6,6 +6,7 @@ const { check, validationResult } = require('express-validator');
 
 // Load models
 const User = require('../models/User');
+const Trip = require('../models/Trip');
 
 // Load middleware
 const { ensureAuthenticated, ensureGuest } = require('../middleware/auth');
@@ -125,12 +126,41 @@ router.get('/logout', (req, res) => {
 
 // @desc    User profile
 // @route   GET /users/profile
-router.get('/profile', ensureAuthenticated, (req, res) => {
-  res.render('users/profile', {
-    title: 'โปรไฟล์ - MixTrip',
-    description: 'จัดการโปรไฟล์และแผนการเดินทางของคุณ',
-    user: req.user
-  });
+router.get('/profile', ensureAuthenticated, async (req, res) => {
+  try {
+    // ในอนาคตอาจจะดึงจำนวนทริปมาแสดงตรงนี้
+    res.render('users/profile', {
+      title: 'โปรไฟล์ - MixTrip',
+      description: 'จัดการโปรไฟล์และแผนการเดินทางของคุณ',
+      user: req.user
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('500', {
+      title: '500 - Server Error',
+      description: 'Something went wrong on our end'
+    });
+  }
+});
+
+// @desc    Get user trips API for profile
+// @route   GET /users/trips
+router.get('/trips', ensureAuthenticated, async (req, res) => {
+  try {
+    const trips = await Trip.find({ creator: req.user.id }).sort({ createdAt: -1 });
+    
+    res.render('trips/user-trips', {
+      title: `ทริปของ ${req.user.displayName} - MixTrip`,
+      description: `ดูทริปทั้งหมดของ ${req.user.displayName}`,
+      trips,
+      profileUser: req.user,
+      isOwnProfile: true,
+      layout: false
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดทริป');
+  }
 });
 
 // @desc    Edit profile

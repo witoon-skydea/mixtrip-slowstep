@@ -1,0 +1,660 @@
+<section class="trip-detail-section">
+  <div class="container">
+    <% if (trip.coverImage) { %>
+      <div class="trip-cover" style="background-image: url('<%= trip.coverImage %>')">
+        <div class="trip-cover-overlay"></div>
+      </div>
+    <% } else { %>
+      <div class="trip-cover default-cover">
+        <div class="trip-cover-overlay"></div>
+      </div>
+    <% } %>
+    
+    <div class="trip-header">
+      <div class="trip-title-container">
+        <h1 class="trip-title"><%= trip.title %></h1>
+        <span class="trip-visibility <%= trip.isPublic ? 'public' : 'private' %>">
+          <i class="fas <%= trip.isPublic ? 'fa-globe' : 'fa-lock' %>"></i> 
+          <%= trip.isPublic ? 'สาธารณะ' : 'ส่วนตัว' %>
+        </span>
+      </div>
+      
+      <div class="trip-meta">
+        <div class="trip-dates">
+          <i class="fas fa-calendar-alt"></i>
+          <%= new Date(trip.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) %> - 
+          <%= new Date(trip.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) %>
+          (<%= Math.ceil((new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24)) + 1 %> วัน)
+        </div>
+        <div class="trip-creator">
+          <i class="fas fa-user"></i> สร้างโดย 
+          <a href="/trips/user/<%= trip.creator._id %>">
+            <%= trip.creator.displayName %>
+          </a>
+        </div>
+      </div>
+      
+      <div class="trip-description">
+        <% if (trip.description) { %>
+          <p><%= trip.description %></p>
+        <% } else { %>
+          <p class="no-description">ไม่มีคำอธิบายทริป</p>
+        <% } %>
+      </div>
+      
+      <div class="trip-stats">
+        <div class="stat">
+          <i class="fas fa-eye"></i> <%= trip.viewCount %> ครั้ง
+        </div>
+        <div class="stat">
+          <i class="fas fa-heart"></i> <%= trip.likeCount %> ถูกใจ
+        </div>
+        <div class="stat">
+          <i class="fas fa-random"></i> <%= trip.remixCount %> รีมิกซ์
+        </div>
+      </div>
+      
+      <% if (isCreator) { %>
+        <div class="trip-actions">
+          <a href="/trips/<%= trip._id %>/edit" class="btn btn-secondary">
+            <i class="fas fa-edit"></i> แก้ไขทริป
+          </a>
+          <button type="button" class="btn btn-danger" id="delete-trip-btn">
+            <i class="fas fa-trash-alt"></i> ลบทริป
+          </button>
+          <form id="delete-trip-form" action="/trips/<%= trip._id %>?_method=DELETE" method="POST" style="display: none;"></form>
+        </div>
+      <% } else if (user) { %>
+        <div class="trip-actions">
+          <button type="button" class="btn btn-primary" id="remix-trip-btn" disabled>
+            <i class="fas fa-random"></i> รีมิกซ์ทริป
+          </button>
+          <button type="button" class="btn btn-text" id="save-trip-btn" disabled>
+            <i class="far fa-bookmark"></i> บันทึกทริป
+          </button>
+        </div>
+      <% } %>
+    </div>
+    
+    <div class="trip-content">
+      <div class="trip-tabs">
+        <ul class="tab-links">
+          <li class="active"><a href="#overview">ภาพรวม</a></li>
+          <li><a href="#itinerary">กำหนดการ</a></li>
+          <li><a href="#map">แผนที่</a></li>
+          <li><a href="#comments">ความคิดเห็น</a></li>
+        </ul>
+      </div>
+      
+      <div class="tab-content">
+        <div id="overview" class="tab-pane active">
+          <h2>ภาพรวมทริป</h2>
+          
+          <div class="trip-summary">
+            <div class="summary-item">
+              <h3>สถานที่ที่จะไป</h3>
+              <% if (trip.locations && trip.locations.length > 0) { %>
+                <ul class="locations-list">
+                  <% trip.locations.forEach(location => { %>
+                    <li>
+                      <h4><%= location.name %></h4>
+                      <p><%= location.address %></p>
+                    </li>
+                  <% }); %>
+                </ul>
+              <% } else { %>
+                <p class="empty-message">ยังไม่ได้เพิ่มสถานที่</p>
+              <% } %>
+            </div>
+            
+            <div class="summary-item">
+              <h3>รายละเอียดเพิ่มเติม</h3>
+              <% if (trip.description) { %>
+                <p><%= trip.description %></p>
+              <% } else { %>
+                <p class="empty-message">ไม่มีรายละเอียดเพิ่มเติม</p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+        
+        <div id="itinerary" class="tab-pane">
+          <h2>กำหนดการเดินทาง</h2>
+          
+          <% if (trip.days && trip.days.length > 0) { %>
+            <div class="days-list">
+              <% trip.days.forEach((day, index) => { %>
+                <div class="day-card">
+                  <div class="day-header">
+                    <h3>วันที่ <%= index + 1 %>: <%= new Date(day.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) %></h3>
+                  </div>
+                  
+                  <% if (day.activities && day.activities.length > 0) { %>
+                    <div class="timeline">
+                      <% day.activities.forEach(activity => { %>
+                        <div class="timeline-item">
+                          <div class="timeline-time">
+                            <%= activity.startTime %> - <%= activity.endTime %>
+                          </div>
+                          <div class="timeline-content">
+                            <h4><%= activity.title %></h4>
+                            <% if (activity.location && activity.location.name) { %>
+                              <p class="location"><i class="fas fa-map-marker-alt"></i> <%= activity.location.name %></p>
+                            <% } %>
+                            <% if (activity.description) { %>
+                              <p><%= activity.description %></p>
+                            <% } %>
+                            <% if (activity.notes) { %>
+                              <p class="notes"><i class="fas fa-sticky-note"></i> <%= activity.notes %></p>
+                            <% } %>
+                          </div>
+                        </div>
+                      <% }); %>
+                    </div>
+                  <% } else { %>
+                    <p class="empty-message">ยังไม่มีกิจกรรมในวันนี้</p>
+                  <% } %>
+                </div>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <p class="empty-message">ยังไม่มีกำหนดการเดินทาง</p>
+          <% } %>
+        </div>
+        
+        <div id="map" class="tab-pane">
+          <h2>แผนที่การเดินทาง</h2>
+          
+          <div id="trip-map"></div>
+          
+          <% if (!trip.locations || trip.locations.length === 0) { %>
+            <p class="empty-message">ไม่มีข้อมูลสถานที่สำหรับแสดงบนแผนที่</p>
+          <% } %>
+        </div>
+        
+        <div id="comments" class="tab-pane">
+          <h2>ความคิดเห็น</h2>
+          
+          <p class="empty-message">ยังไม่มีความคิดเห็น</p>
+          
+          <% if (user) { %>
+            <div class="comment-form">
+              <h3>แสดงความคิดเห็น</h3>
+              <form action="/trips/<%= trip._id %>/comments" method="POST">
+                <div class="form-group">
+                  <textarea name="content" rows="3" placeholder="เขียนความคิดเห็นของคุณที่นี่..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" disabled>ส่งความคิดเห็น</button>
+              </form>
+            </div>
+          <% } else { %>
+            <div class="login-to-comment">
+              <p><a href="/users/login">เข้าสู่ระบบ</a> เพื่อแสดงความคิดเห็น</p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching
+    const tabLinks = document.querySelectorAll('.tab-links li a');
+    
+    tabLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Hide all tab panes
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+          pane.classList.remove('active');
+        });
+        
+        // Remove active class from all tab links
+        document.querySelectorAll('.tab-links li').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        
+        // Add active class to current tab link
+        this.parentElement.classList.add('active');
+        
+        // Show target tab pane
+        const targetId = this.getAttribute('href');
+        document.querySelector(targetId).classList.add('active');
+      });
+    });
+    
+    // Delete trip confirmation
+    const deleteBtn = document.getElementById('delete-trip-btn');
+    const deleteForm = document.getElementById('delete-trip-form');
+    
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function() {
+        if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบทริปนี้? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
+          deleteForm.submit();
+        }
+      });
+    }
+    
+    // Google Maps initialization (mock)
+    function initMap() {
+      // ตรวจสอบว่ามีข้อมูลสถานที่หรือไม่
+      <% if (trip.locations && trip.locations.length > 0) { %>
+        console.log('Map would display here with locations:', <%= JSON.stringify(trip.locations) %>);
+        
+        // แสดงข้อความแจ้งผู้ใช้ (จะแทนที่ด้วยแผนที่จริงในโปรดักชัน)
+        const mapElem = document.getElementById('trip-map');
+        mapElem.innerHTML = '<div class="map-placeholder">แผนที่กำลังโหลด (Mock)</div>';
+        
+      <% } else { %>
+        console.log('No locations to display on map');
+      <% } %>
+    }
+    
+    // Call mock map initialization
+    setTimeout(initMap, 1000);
+  });
+</script>
+
+<style>
+  .trip-detail-section {
+    padding: 0 0 3rem;
+  }
+  
+  .trip-cover {
+    height: 350px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 0 0 8px 8px;
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  
+  .default-cover {
+    background-image: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+    height: 250px;
+  }
+  
+  .trip-cover-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.6));
+    border-radius: 0 0 8px 8px;
+  }
+  
+  .trip-header {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  }
+  
+  .trip-title-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .trip-title {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin: 0;
+  }
+  
+  .trip-visibility {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  
+  .trip-visibility.public {
+    background-color: #e3f2fd;
+    color: #1976d2;
+  }
+  
+  .trip-visibility.private {
+    background-color: #ffebee;
+    color: #d32f2f;
+  }
+  
+  .trip-meta {
+    display: flex;
+    gap: 2rem;
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .trip-meta i {
+    color: var(--primary-color);
+    margin-right: 0.5rem;
+  }
+  
+  .trip-creator a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .trip-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #444;
+    margin-bottom: 1.5rem;
+  }
+  
+  .no-description {
+    color: #888;
+    font-style: italic;
+  }
+  
+  .trip-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .stat {
+    color: #666;
+    font-size: 0.95rem;
+  }
+  
+  .stat i {
+    color: var(--primary-color);
+    margin-right: 0.3rem;
+  }
+  
+  .trip-actions {
+    display: flex;
+    gap: 0.8rem;
+  }
+  
+  .trip-content {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+  
+  .trip-tabs {
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .tab-links {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .tab-links li {
+    margin: 0;
+  }
+  
+  .tab-links li a {
+    display: block;
+    padding: 1rem 1.5rem;
+    color: #666;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+  
+  .tab-links li.active a {
+    color: var(--primary-color);
+    border-bottom: 3px solid var(--primary-color);
+  }
+  
+  .tab-links li a:hover {
+    color: var(--primary-color);
+  }
+  
+  .tab-content {
+    padding: 2rem;
+  }
+  
+  .tab-pane {
+    display: none;
+  }
+  
+  .tab-pane.active {
+    display: block;
+  }
+  
+  .tab-pane h2 {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+  }
+  
+  .trip-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  
+  .summary-item h3 {
+    font-size: 1.3rem;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .locations-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .locations-list li {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .locations-list li:last-child {
+    border-bottom: none;
+  }
+  
+  .locations-list h4 {
+    margin: 0 0 0.3rem;
+    font-size: 1.1rem;
+    color: #333;
+  }
+  
+  .locations-list p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #777;
+  }
+  
+  .days-list {
+    margin-top: 1.5rem;
+  }
+  
+  .day-card {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+  
+  .day-header h3 {
+    margin: 0 0 1rem;
+    font-size: 1.3rem;
+    color: #333;
+  }
+  
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+  
+  .timeline:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 8px;
+    width: 2px;
+    background-color: #ddd;
+  }
+  
+  .timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px dashed #eee;
+  }
+  
+  .timeline-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  
+  .timeline-item:before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: -2rem;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    z-index: 1;
+  }
+  
+  .timeline-time {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+  }
+  
+  .timeline-content h4 {
+    margin: 0 0 0.5rem;
+    font-size: 1.1rem;
+    color: #333;
+  }
+  
+  .timeline-content p {
+    margin: 0.5rem 0;
+    color: #555;
+  }
+  
+  .timeline-content .location {
+    color: #666;
+    font-size: 0.95rem;
+  }
+  
+  .timeline-content .location i {
+    color: var(--primary-color);
+    margin-right: 0.3rem;
+  }
+  
+  .timeline-content .notes {
+    font-style: italic;
+    color: #777;
+    font-size: 0.95rem;
+  }
+  
+  .timeline-content .notes i {
+    color: var(--primary-color);
+    margin-right: 0.3rem;
+  }
+  
+  #trip-map {
+    height: 400px;
+    width: 100%;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  
+  .map-placeholder {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 1.2rem;
+  }
+  
+  .empty-message {
+    text-align: center;
+    color: #888;
+    padding: 2rem;
+  }
+  
+  .comment-form {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+  }
+  
+  .comment-form h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  
+  .comment-form textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    font-size: 1rem;
+  }
+  
+  .login-to-comment {
+    margin-top: 2rem;
+    text-align: center;
+  }
+  
+  .login-to-comment a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  @media (max-width: 768px) {
+    .trip-meta {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .trip-stats {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .trip-actions {
+      flex-direction: column;
+    }
+    
+    .trip-summary {
+      grid-template-columns: 1fr;
+    }
+    
+    .tab-links {
+      flex-wrap: wrap;
+    }
+    
+    .tab-links li a {
+      padding: 0.8rem 1rem;
+    }
+  }
+</style>

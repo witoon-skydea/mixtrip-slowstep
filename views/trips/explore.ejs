@@ -1,0 +1,210 @@
+<section class="explore-section">
+  <div class="container">
+    <div class="section-header">
+      <h1>สำรวจทริป</h1>
+      <p>ค้นพบแผนการเดินทางที่น่าสนใจจากผู้ใช้ทั่วโลก</p>
+    </div>
+
+    <div class="search-filters">
+      <input type="text" class="search-input" placeholder="ค้นหาทริป...">
+      <select class="filter-select">
+        <option value="all">ทั้งหมด</option>
+        <option value="popular">ยอดนิยม</option>
+        <option value="recent">ล่าสุด</option>
+      </select>
+    </div>
+
+    <div class="empty-state">
+      <div class="empty-text">
+        🌍
+      </div>
+      <h3>ยังไม่มีทริปสาธารณะ</h3>
+      <p>เป็นคนแรกที่แชร์ประสบการณ์การเดินทางของคุณ!</p>
+      <% if(user) { %>
+        <a href="/trips/create" class="btn btn-primary">สร้างทริปใหม่</a>
+      <% } else { %>
+        <a href="/users/login" class="btn btn-primary">เข้าสู่ระบบเพื่อสร้างทริป</a>
+      <% } %>
+    </div>
+
+    <!-- 
+    แสดงรายการทริปเมื่อมีทริปในระบบแล้ว (จะพัฒนาในเฟสต่อไป)
+    <div class="trip-grid">
+      <% for(let i = 0; i < 6; i++) { %>
+        <div class="trip-card">
+          <div class="trip-card-image">
+            <img src="https://source.unsplash.com/random/300x200/?travel" alt="Trip Image">
+          </div>
+          <div class="trip-card-content">
+            <h3>ชื่อทริป</h3>
+            <p class="trip-creator">โดย <a href="#">ชื่อผู้สร้าง</a></p>
+            <p class="trip-dates">10 ก.ค. - 15 ก.ค. 2023 (5 วัน)</p>
+            <div class="trip-stats">
+              <span><i class="fas fa-eye"></i> 120</span>
+              <span><i class="fas fa-heart"></i> 35</span>
+              <span><i class="fas fa-random"></i> 8</span>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    -->
+  </div>
+</section>
+
+<style>
+  .explore-section {
+    padding: 2rem 0;
+  }
+  
+  .section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .section-header h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+  }
+  
+  .section-header p {
+    font-size: 1.1rem;
+    color: #666;
+  }
+  
+  .search-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .search-input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .filter-select {
+    padding: 0.8rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 1rem;
+    min-width: 150px;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  }
+  
+  .empty-text {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+  
+  .empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  .empty-state p {
+    color: #666;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* จะใช้ในเฟสต่อไปเมื่อมีทริปแล้ว
+  .trip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .trip-card {
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  
+  .trip-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .trip-card-image {
+    height: 180px;
+    overflow: hidden;
+  }
+  
+  .trip-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+  }
+  
+  .trip-card:hover .trip-card-image img {
+    transform: scale(1.05);
+  }
+  
+  .trip-card-content {
+    padding: 1.2rem;
+  }
+  
+  .trip-card-content h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  .trip-creator {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+  }
+  
+  .trip-creator a {
+    color: var(--primary-color);
+    text-decoration: none;
+  }
+  
+  .trip-dates {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 0.8rem;
+  }
+  
+  .trip-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #888;
+  }
+  
+  .trip-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  */
+  
+  @media (max-width: 768px) {
+    .search-filters {
+      flex-direction: column;
+    }
+    
+    /* .trip-grid {
+      grid-template-columns: 1fr;
+    } */
+  }
+</style>
